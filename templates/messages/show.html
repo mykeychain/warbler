@@ -33,21 +33,7 @@
             </div>
             <p class="single-message">{{ message.text }}</p>
             <span class="text-muted">{{ message.timestamp.strftime('%d %B %Y') }}</span>
-            <div style="z-index: 2; display: inline-block">
-              {% if g.user in message.liked_users %}
-                <form action="/users/unlike/{{message.id}}" method="POST">
-                  <button style="background-color: transparent; border: none">
-                    <i class="fas fa-feather fa-lg" style="color: rgb(29, 161, 242)"></i>
-                  </button>
-                </form>
-              {% else %}
-                <form action="/users/like/{{message.id}}" method="POST">
-                  <button style="background-color: transparent; border: none">
-                    <i class="fas fa-feather fa-lg" style="color: grey"></i>
-                  </button>
-                </form>
-              {% endif %}
-            </div>
+            {% include '/messages/_like.html' %}
           </div>
         </li>
       </ul>
