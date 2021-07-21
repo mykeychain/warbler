@@ -335,6 +335,18 @@ def unlike_message(message_id):
 
     return redirect("/")
 
+@app.route('/users/<int:user_id>/likes')
+def users_likes(user_id):
+    """Show list of likes of this user."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(user_id)
+    return render_template('users/likes.html', user=user)
+
+
 
 ##############################################################################
 # Homepage and error pages
