@@ -321,19 +321,19 @@ def like_message(message_id):
     return redirect("/")
 
 
-@app.route('/users/stop-following/<int:follow_id>', methods=['POST'])
-def stop_following(follow_id):
+@app.route('/users/unlike/<int:message_id>', methods=['POST'])
+def unlike_message(message_id):
     """Unlike a message for current user."""
 
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    followed_user = User.query.get(follow_id)
-    g.user.following.remove(followed_user)
+    liked_message = Message.query.get_or_404(message_id)
+    g.user.liked_messages.remove(liked_message)
     db.session.commit()
 
-    return redirect(f"/users/{g.user.id}/following")
+    return redirect("/")
 
 
 ##############################################################################
