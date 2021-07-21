@@ -244,9 +244,12 @@ def delete_user():
 
     do_logout()
 
+    Message.query.filter(Message.user_id == g.user.id).delete()
     db.session.delete(g.user)
     db.session.commit()
 
+    session.clear()
+    flash("User successfully deleted")
     return redirect("/signup")
 
 
