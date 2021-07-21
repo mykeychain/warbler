@@ -253,6 +253,7 @@ def delete_user():
     return redirect("/signup")
 
 
+
 ##############################################################################
 # Messages routes:
 
@@ -300,6 +301,39 @@ def messages_destroy(message_id):
     db.session.commit()
 
     return redirect(f"/users/{g.user.id}")
+
+
+##############################################################################
+# Likes
+
+@app.route('/users/like/<int:message_id>', methods=['POST'])
+def like_message(message_id):
+    """Like a message for current user."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    liked_message = Message.query.get_or_404(message_id)
+    g.user.liked_messages.append(liked_message)
+    db.session.commit()
+
+    return redirect("/")
+
+
+@app.route('/users/stop-following/<int:follow_id>', methods=['POST'])
+def stop_following(follow_id):
+    """Unlike a message for current user."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    followed_user = User.query.get(follow_id)
+    g.user.following.remove(followed_user)
+    db.session.commit()
+
+    return redirect(f"/users/{g.user.id}/following")
 
 
 ##############################################################################

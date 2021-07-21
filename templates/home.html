@@ -57,6 +57,17 @@
               <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
               <p>{{ msg.text }}</p>
             </div>
+            <div style="z-index: 2">
+              {% if g.user in msg.liked_users %}
+                <form action="/users/unlike/{{msg.id}}" method="POST">
+                  <button><i class="fas fa-feather fa-lg" style="color: rgb(29, 161, 242)"></i></button>
+                </form>
+              {% else %}
+                <form action="/users/like/{{msg.id}}" method="POST">
+                  <button class="fas fa-feather fa-lg" style="color: grey"></button>
+                </form>
+              {% endif %}
+          </div>
           </li>
         {% endfor %}
       </ul>

@@ -194,6 +194,7 @@ nav + .container {
 
 .message-area {
   margin-left: 10px;
+  width: 95%;
 }
 
 #warbler-hero {
