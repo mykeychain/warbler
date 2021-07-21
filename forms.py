@@ -33,4 +33,5 @@ class UserEditForm(FlaskForm):
     image_url = StringField('(Optional) Image URL')
     header_image_url = StringField('(Optional) Image URL')
     bio = StringField('Bio')
+    location = StringField("Location")
     password = PasswordField('Current Password', validators=[Length(min=6)])
