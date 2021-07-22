@@ -7,6 +7,7 @@
 
 import os
 from unittest import TestCase
+from sqlalchemy.exc import NoResultFound
 
 from models import db, connect_db, Message, User
 
@@ -70,3 +71,69 @@ class MessageViewTestCase(TestCase):
 
             msg = Message.query.one()
             self.assertEqual(msg.text, "Hello")
+
+    def test_delete_message(self):
+        """Can user delete their own message?"""
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+            #adds message
+            c.post("/messages/new", data={"text": "Hello"})
+            msg = Message.query.one()
+
+            delete_resp = c.post(f"/messages/{msg.id}/delete")
+
+            self.assertEqual(delete_resp.status_code, 302)
+            self.assertEqual(Message.query.count(), 0)
+
+    def test_find_message_not_exist(self):
+        """Can find a message id that does not exist?"""
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+        
+            resp = c.get("/messages/0")
+
+            self.assertEqual(resp.status_code, 404)
+    
+    def test_show_message(self):
+        """Can see message details?"""
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+            #adds message
+            c.post("/messages/new", data={"text": "Hello"})
+            msg = Message.query.one()
+
+            resp = c.get(f"/messages/{msg.id}")
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Test Message - For Testing", html)
+
+    def test_add_message_not_logged_in(self):
+        """Can add a message when not logged in?"""
+
+        with self.client as c:
+            resp = c.post("/messages/new", data={"text": "Hello"}, follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized", html)
+    
+    def test_delete_message_not_logged_in(self):
+        """Cab delete a nessage when not logged in?"""
+
+        with self.client as c:
+            resp = c.post("/messages/1/delete", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized", html)
+
+    

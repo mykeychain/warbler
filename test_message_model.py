@@ -38,8 +38,6 @@ class MessageModelTestCase(TestCase):
 
         User.query.delete()
         Message.query.delete()
-        Follows.query.delete()
-        Like.query.delete()
 
         user = User(
             email="test@test.com",
