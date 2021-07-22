@@ -51,6 +51,13 @@ class MessageViewTestCase(TestCase):
 
         db.session.commit()
 
+
+    def tearDown(self):
+        """Clean up any fouled transaction."""
+
+        db.session.rollback()
+
+
     def test_add_message(self):
         """Can user add a message?"""
 
