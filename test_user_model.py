@@ -8,6 +8,8 @@
 import os
 from unittest import TestCase
 
+from sqlalchemy.exc import IntegrityError
+
 from models import db, User, Message, Follows, Like
 
 # BEFORE we import our app, let's set an environmental variable
@@ -44,7 +46,7 @@ class UserModelTestCase(TestCase):
             username="testuser",
             password="HASHED_PASSWORD"
         )
-        db.session.add(user)
+
         user2 = User(
             email="test2@test.com",
             username="testuser2",
@@ -58,10 +60,12 @@ class UserModelTestCase(TestCase):
 
         self.client = app.test_client()
 
+
     def tearDown(self):
         """Clean up any fouled transaction."""
 
         db.session.rollback()
+
 
     def test_user_model(self):
         """Does basic model work?"""
@@ -79,10 +83,12 @@ class UserModelTestCase(TestCase):
         self.assertEqual(len(u.messages), 0)
         self.assertEqual(len(u.followers), 0)
 
-    # def test_repr_method(self):
-    #     """Does repr method work?"""
 
-    #     self.assertEqual(f'<User #{self.user.id}: {self.user.username}, {self.user.email}>', self.user)
+    def test_repr_method(self):
+        """Does repr method work?"""
+
+        self.assertEqual(f'<User #{self.user.id}: {self.user.username}, {self.user.email}>', self.user.__repr__())
+
 
     def test_is_following(self):
         """Does is_following detect user1 is following user2?"""
@@ -90,10 +96,12 @@ class UserModelTestCase(TestCase):
         self.user.following.append(self.user2)
         self.assertTrue(self.user.is_following(self.user2))
 
+
     def test_is_not_following(self):
         """Does is_following detect user1 is not following user2?"""
         
         self.assertFalse(self.user.is_following(self.user2))
+
 
     def test_is_followed_by(self):
         """Does is_followed_by detect user1 is followed by user12"""
@@ -101,10 +109,12 @@ class UserModelTestCase(TestCase):
         self.user2.following.append(self.user)
         self.assertTrue(self.user.is_followed_by(self.user2))
 
+
     def test_is_not_followed_by(self):
         """Does is_followed_by detect user1 is not followed by user12"""
         
         self.assertFalse(self.user.is_followed_by(self.user2))
+
 
     def test_user_signup(self):
         """Does User.signup successfully create a new user given valid credentials?"""
@@ -123,21 +133,55 @@ class UserModelTestCase(TestCase):
         self.assertNotEqual("HASHED_PASSWORD", u.password)
         self.assertEqual('tester', u.username)
 
+
     def test_user_signup_fail(self):
         """Does User.signup fail to create a new user if any of the validations
            (e.g. uniqueness, non-nullable fields) fail?"""
 
         u = User.signup(
-            username="test",
+            username="testuser",
             password="HASHED_PASSWORD",
-            email="",
+            email="test@email.com",
             image_url=""
         )
 
         db.session.add(u)
+
+        with self.assertRaises(IntegrityError):
+            db.session.commit()
+
+
+    def test_user_authenticate_success(self):
+        """Does User.authenticate return user when given valid username and password?"""
+
+        existing_user = User.signup(
+            username="tester",
+            password="HASHED_PASSWORD",
+            email="tester@test.com",
+            image_url=""
+        )
+
+        db.session.add(existing_user)
         db.session.commit()
 
-        # self.assertRaises()
-        # self.assertEqual('tester', self.username)
+        user = User.authenticate("tester", "HASHED_PASSWORD")
 
+        self.assertIsInstance(user, User)
+
+
+    def test_user_authenticate_username_fail(self):
+        """Does User.authenticate fail to return user when given invalid username?"""
+
+        user = User.authenticate("invalid_username", "HASHED_PASSWORD")
+        
+        self.assertFalse(user)
+
+    
+    def test_user_authenticate_password_fail(self):
+        """Does User.authenticate fail to return user when given invalid password?"""
+
+        with self.assertRaises(ValueError):
+            User.authenticate("testuser", "Wrong_Password")
+        
+        
 
