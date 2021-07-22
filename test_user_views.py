@@ -127,4 +127,117 @@ class UserViewTestCase(TestCase):
             html = response.get_data(as_text=True)
 
             self.assertEqual(response.status_code, 200)
-            self.assertIn(f"@{self.testuser2.username}", html)        
+            self.assertIn(f"@{self.testuser2.username}", html) 
+
+
+    def test_logged_in_user_view_others_likes(self):
+        """Can a logged in user view others' liked messages page"""
+
+        with self.client as c:  
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+            
+            response = c.get(f"/users/{self.testuser2.id}/likes")
+
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(f"@{self.testuser2.username}", html) 
+
+
+    def test_logged_out_view_others_followers(self):
+        """Can access others' followers page when logged out?"""   
+
+        with self.client as c:
+            response = c.get(f"/users/{self.testuser2.id}/followers",
+                            follow_redirects=True)
+
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("Access unauthorized", html)
+
+    
+    def test_logged_out_view_others_following(self):
+        """Can access others' following page when logged out?"""   
+
+        with self.client as c:
+            response = c.get(f"/users/{self.testuser2.id}/following",
+                            follow_redirects=True)
+
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("Access unauthorized", html)
+
+
+    def test_logged_out_view_others_likes(self):
+        """Can access others' liked messages page when logged out?"""   
+
+        with self.client as c:
+            response = c.get(f"/users/{self.testuser2.id}/likes",
+                            follow_redirects=True)
+
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("Access unauthorized", html)
+
+    
+    def test_get_invalid_user(self):
+        """Can get details of invalid user?"""
+
+        with self.client as c:
+            response = c.get("/users/0")
+
+            self.assertEqual(response.status_code, 404)
+
+
+    def test_get_existing_user(self):
+        """Can get details of existing user?"""
+
+        with self.client as c:
+            response = c.get(f"/users/{self.testuser.id}")
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(f"@{self.testuser.username}", html)
+    
+
+    def test_show_edit_own_profile(self):
+        """Can display edit profile page when logged in?"""
+
+        with self.client as c: 
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+            response = c.get("/users/profile")
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status, '200 OK')
+            self.assertIn("Test Edit User Profile", html)
+
+    
+    def test_post_edit_own_profile(self): 
+        """Can post to edit profile page when logged in?"""
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+            response = c.post(
+                            "/users/profile",
+                            data={
+                                'bio': 'updated bio',
+                                'password': 'password'
+                                },
+                            follow_redirects=True
+                        )
+
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("updated bio", html)
+
+            
+        
