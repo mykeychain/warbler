@@ -60,10 +60,12 @@ class MessageModelTestCase(TestCase):
 
         self.client = app.test_client()
 
+
     def tearDown(self):
         """Clean up any fouled transaction."""
 
         db.session.rollback()
+
 
     def test_message_model(self):
         """Does basic model work?"""
@@ -87,6 +89,7 @@ class MessageModelTestCase(TestCase):
         db.session.add(m)
         with self.assertRaises(IntegrityError):
             db.session.commit()
+
 
     def test_repr_method(self):
         """Does repr method work?"""
