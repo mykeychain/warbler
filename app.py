@@ -119,7 +119,7 @@ def login():
     return render_template('users/login.html', form=form)
 
 
-@app.route('/logout')
+@app.route('/logout', methods=["POST"])
 def logout():
     """Handle logout of user."""
 
@@ -232,7 +232,8 @@ def profile():
             user.email = form.email.data
             user.image_url = form.image_url.data
             user.header_image_url = form.header_image_url.data
-            user.bio = form.bio.data
+            user.bio = form.bio.data or None
+            user.location = form.location.data or None
 
             db.session.commit()
             return redirect(f"/users/{g.user.id}")
@@ -349,6 +350,18 @@ def unlike_message(message_id):
 
     return redirect("/")
 
+@app.route('/users/<int:user_id>/likes')
+def users_likes(user_id):
+    """Show list of likes of this user."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(user_id)
+    return render_template('users/likes.html', user=user)
+
+
 
 ##############################################################################
 # Homepage and error pages
@@ -361,7 +374,6 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of followed_users
     """
-
 
     if g.user:
         following_ids = [user.id for user in g.user.following]

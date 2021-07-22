@@ -176,6 +176,9 @@ class Message(db.Model):
         nullable=False,
     )
 
+    def __repr__(self):
+        return f"<Message #{self.id}: {self.text} by {self.user_id}>"
+    
     user = db.relationship('User')
 
 

@@ -31,13 +31,13 @@ body.error-404 {
   z-index: 9999;
 }
 
-.navbar a {
+.navbar a, .navbar button {
   color: #66757f;
   font-size: 13px;
   font-weight: bold;
 }
 
-.navbar a:hover {
+.navbar a:hover, .navbar button:hover {
   color: #1c94e0;
 }
 
