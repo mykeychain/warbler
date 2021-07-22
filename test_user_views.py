@@ -274,5 +274,36 @@ class UserViewTestCase(TestCase):
 
             self.assertEqual(unfollow_response.status_code, 200)
             self.assertNotIn(f"@{self.testuser2.username}", html)
+
+    def test_follow_user_not_logged_in(self):
+        """Can user follow another user when not logged in?"""
+
+        with self.client as c:
+            response = c.post(f"/users/follow/{self.testuser2.id}", follow_redirects=True)
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("Access unauthorized", html)
             
+    def test_unfollow_user_not_logged_in(self):
+        """Can user unfollow another user when not logged in?"""
+
+        with self.client as c:
+            response = c.post(f"/users/stop-following/{self.testuser2.id}", follow_redirects=True)
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("Access unauthorized", html)
+
+    def test_search_user(self):
+        """Can search for another user with search?"""
+
+        with self.client as c:
+            response = c.get("/users")
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(f"@{self.testuser.username}", html)
         
+    # def test_delete_user(self):
+    #     """Can delete user?"""
