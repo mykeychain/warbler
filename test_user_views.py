@@ -7,6 +7,7 @@
 
 import os
 from unittest import TestCase
+from flask import session
 
 from models import db, Message, User, Follows
 
@@ -69,7 +70,27 @@ class UserViewTestCase(TestCase):
 
             html = response.get_data(as_text=True)
 
+            self.assertEqual(response.status_code, 200)
             self.assertIn("User Logged In", html)
+            self.assertEqual(session[CURR_USER_KEY], self.testuser.id)
 
 
-    # def test_logout(self):
+
+    def test_logout(self):
+        """Can user logout successfully?"""
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+            
+            response = c.post("/logout", follow_redirects=True)
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("Successfully logged out", html)
+
+            with self.assertRaises(KeyError): 
+                session[CURR_USER_KEY]
+
+    
+    
