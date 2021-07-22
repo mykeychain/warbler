@@ -225,19 +225,29 @@ class UserViewTestCase(TestCase):
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.testuser.id
 
-            response = c.post(
-                            "/users/profile",
-                            data={
+            response = c.post("/users/profile",
+                              data={
                                 'bio': 'updated bio',
                                 'password': 'password'
                                 },
-                            follow_redirects=True
-                        )
+                              follow_redirects=True)
 
             html = response.get_data(as_text=True)
 
             self.assertEqual(response.status_code, 200)
             self.assertIn("updated bio", html)
+
+    def test_show_edit_profile_not_logged_in(self):
+        """Can see edit profile page when not logged in?"""
+
+        with self.client as c:
+            response = c.get("/users/profile", follow_redirects=True)
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("You are currently not logged in", html)
+
+    def test_follow_user(self):
 
             
         
