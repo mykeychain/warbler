@@ -25,6 +25,7 @@ class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[Length(min=6)])
 
+
 class UserEditForm(FlaskForm):
     """Form for editing a user."""
 
@@ -34,3 +35,7 @@ class UserEditForm(FlaskForm):
     header_image_url = StringField('(Optional) Image URL')
     bio = StringField('Bio')
     password = PasswordField('Current Password', validators=[Length(min=6)])
+
+
+class CsrfOnlyForm(FlaskForm):
+    """Empty form that can be used for CSRF validation."""

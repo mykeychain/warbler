@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm, UserEditForm
+from forms import UserAddForm, LoginForm, MessageForm, UserEditForm, CsrfOnlyForm
 from models import db, connect_db, User, Message
 import pdb
 
@@ -39,6 +39,13 @@ def add_user_to_g():
 
     else:
         g.user = None
+
+
+@app.before_request
+def add_csrf_only_form():
+    """Add a CSRF-only form so that every route can use it."""
+    g.csrf_form = CsrfOnlyForm()
+
 
 
 def do_login(user):
@@ -116,7 +123,8 @@ def login():
 def logout():
     """Handle logout of user."""
 
-    do_logout()
+    if g.csrf_form.validate_on_submit():
+        do_logout()
 
     return redirect('/login')
 
@@ -182,9 +190,10 @@ def add_follow(follow_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    followed_user = User.query.get_or_404(follow_id)
-    g.user.following.append(followed_user)
-    db.session.commit()
+    if g.csrf_form.validate_on_submit():
+        followed_user = User.query.get_or_404(follow_id)
+        g.user.following.append(followed_user)
+        db.session.commit()
 
     return redirect(f"/users/{g.user.id}/following")
 
@@ -197,9 +206,10 @@ def stop_following(follow_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    followed_user = User.query.get(follow_id)
-    g.user.following.remove(followed_user)
-    db.session.commit()
+    if g.csrf_form.validate_on_submit():
+        followed_user = User.query.get(follow_id)
+        g.user.following.remove(followed_user)
+        db.session.commit()
 
     return redirect(f"/users/{g.user.id}/following")
 
@@ -242,14 +252,15 @@ def delete_user():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    do_logout()
+    if g.csrf_form.validate_on_submit():
+        do_logout()
 
-    Message.query.filter(Message.user_id == g.user.id).delete()
-    db.session.delete(g.user)
-    db.session.commit()
+        Message.query.filter(Message.user_id == g.user.id).delete()
+        db.session.delete(g.user)
+        db.session.commit()
 
-    session.clear()
-    flash("User successfully deleted")
+        session.clear()
+        flash("User successfully deleted")
     return redirect("/signup")
 
 
@@ -296,9 +307,10 @@ def messages_destroy(message_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    msg = Message.query.get(message_id)
-    db.session.delete(msg)
-    db.session.commit()
+    if g.csrf_form.validate_on_submit():
+        msg = Message.query.get(message_id)
+        db.session.delete(msg)
+        db.session.commit()
 
     return redirect(f"/users/{g.user.id}")
 
@@ -314,9 +326,10 @@ def like_message(message_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    liked_message = Message.query.get_or_404(message_id)
-    g.user.liked_messages.append(liked_message)
-    db.session.commit()
+    if g.csrf_form.validate_on_submit():
+        liked_message = Message.query.get_or_404(message_id)
+        g.user.liked_messages.append(liked_message)
+        db.session.commit()
 
     return redirect("/")
 
@@ -329,9 +342,10 @@ def unlike_message(message_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    liked_message = Message.query.get_or_404(message_id)
-    g.user.liked_messages.remove(liked_message)
-    db.session.commit()
+    if g.csrf_form.validate_on_submit():
+        liked_message = Message.query.get_or_404(message_id)
+        g.user.liked_messages.remove(liked_message)
+        db.session.commit()
 
     return redirect("/")
 
