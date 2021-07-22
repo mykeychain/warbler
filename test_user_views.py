@@ -248,6 +248,31 @@ class UserViewTestCase(TestCase):
             self.assertIn("You are currently not logged in", html)
 
     def test_follow_user(self):
+        """Can user follow another user?"""
 
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+            response = c.post(f"/users/follow/{self.testuser2.id}", follow_redirects=True)
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(f"@{self.testuser2.username}", html)
+    
+    def test_unfollow_user(self):
+        """Can user unfollow another user?"""
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+            c.post(f"/users/follow/{self.testuser2.id}", follow_redirects=True)
+
+            unfollow_response = c.post(f"/users/stop-following/{self.testuser2.id}", follow_redirects=True)
+            html = unfollow_response.get_data(as_text=True)
+
+            self.assertEqual(unfollow_response.status_code, 200)
+            self.assertNotIn(f"@{self.testuser2.username}", html)
             
         
