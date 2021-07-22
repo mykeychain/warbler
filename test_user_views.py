@@ -49,7 +49,14 @@ class UserViewTestCase(TestCase):
                                     password="password",
                                     image_url=None)
 
+        self.testuser2 = User.signup(username="testuser2",
+                            email="test2@test.com",
+                            password="password",
+                            image_url=None)
+
         db.session.commit()
+
+        self.testuser2 = User.query.filter_by(username="testuser2").first()
 
 
     def tearDown(self):
@@ -93,4 +100,31 @@ class UserViewTestCase(TestCase):
                 session[CURR_USER_KEY]
 
     
-    
+    def test_logged_in_user_view_others_followers(self):
+        """Can a logged in user view others' followers page"""
+
+        with self.client as c:  
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+            
+            response = c.get(f"/users/{self.testuser2.id}/followers")
+
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(f"@{self.testuser2.username}", html)
+
+
+    def test_logged_in_user_view_others_following(self):
+        """Can a logged in user view others' following page"""
+
+        with self.client as c:  
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+            
+            response = c.get(f"/users/{self.testuser2.id}/following")
+
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(f"@{self.testuser2.username}", html)        
