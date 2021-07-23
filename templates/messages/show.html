@@ -12,20 +12,23 @@
           </a>
           <div class="message-area">
             <div class="message-heading">
-              <a href="/users/{{ message.user.id }}">@{{ message.user.username }}</a>
+              <a href="{{ url_for('users_show', user_id=message.user.id) }}">@{{ message.user.username }}</a>
               {% if g.user %}
                 {% if g.user.id == message.user.id %}
                   <form method="POST"
-                        action="/messages/{{ message.id }}/delete">
+                        action="{{ url_for('messages_destroy', message_id=message.id) }}">
+                    {{ g.csrf_form.hidden_tag() }}
                     <button class="btn btn-outline-danger">Delete</button>
                   </form>
                 {% elif g.user.is_following(message.user) %}
                   <form method="POST"
-                        action="/users/stop-following/{{ message.user.id }}">
+                        action="{{ url_for('stop_following', follow_id=message.user.id) }}">
+                    {{ g.csrf_form.hidden_tag() }}
                     <button class="btn btn-primary">Unfollow</button>
                   </form>
                 {% else %}
-                  <form method="POST" action="/users/follow/{{ message.user.id }}">
+                  <form method="POST" action="{{ url_for('add_follow', follow_id=message.user.id) }}">
+                    {{ g.csrf_form.hidden_tag() }}
                     <button class="btn btn-outline-primary btn-sm">Follow</button>
                   </form>
                 {% endif %}
