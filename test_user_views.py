@@ -127,22 +127,7 @@ class UserViewTestCase(TestCase):
             html = response.get_data(as_text=True)
 
             self.assertEqual(response.status_code, 200)
-            self.assertIn(f"@{self.testuser2.username}", html) 
-
-
-    def test_logged_in_user_view_others_likes(self):
-        """Can a logged in user view others' liked messages page"""
-
-        with self.client as c:  
-            with c.session_transaction() as sess:
-                sess[CURR_USER_KEY] = self.testuser.id
-            
-            response = c.get(f"/users/{self.testuser2.id}/likes")
-
-            html = response.get_data(as_text=True)
-
-            self.assertEqual(response.status_code, 200)
-            self.assertIn(f"@{self.testuser2.username}", html) 
+            self.assertIn(f"@{self.testuser2.username}", html)  
 
 
     def test_logged_out_view_others_followers(self):
@@ -163,19 +148,6 @@ class UserViewTestCase(TestCase):
 
         with self.client as c:
             response = c.get(f"/users/{self.testuser2.id}/following",
-                            follow_redirects=True)
-
-            html = response.get_data(as_text=True)
-
-            self.assertEqual(response.status_code, 200)
-            self.assertIn("Access unauthorized", html)
-
-
-    def test_logged_out_view_others_likes(self):
-        """Can access others' liked messages page when logged out?"""   
-
-        with self.client as c:
-            response = c.get(f"/users/{self.testuser2.id}/likes",
                             follow_redirects=True)
 
             html = response.get_data(as_text=True)
