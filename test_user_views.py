@@ -317,4 +317,19 @@ class UserViewTestCase(TestCase):
 
             self.assertEqual(response.status_code, 200)
             self.assertIn("User successfully deleted", html)
+
+            # checks user successfully deleted
             self.assertEqual(User.query.count(), 1)
+
+    def test_delete_user_not_logged_in(self):
+        """Can delete user when not logged in?"""
+
+        with self.client as c:
+            response = c.post("/users/delete", follow_redirects=True)
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("Access unauthorized", html)
+
+            # checks user was not deleted
+            self.assertEqual(User.query.count(), 2)
