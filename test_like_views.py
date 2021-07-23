@@ -9,7 +9,7 @@ import os
 from unittest import TestCase
 from flask import session
 
-from models import db, Message, User, Like
+from models import db, Message, User
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
@@ -39,8 +39,8 @@ class LikeViewTestCase(TestCase):
     def setUp(self):
         """Create test client, add sample data."""
 
-        User.query.delete()
         Message.query.delete()
+        User.query.delete()
 
         self.client = app.test_client()
 
@@ -86,7 +86,7 @@ class LikeViewTestCase(TestCase):
 
 
     def test_logged_out_view_others_likes(self):
-        """Can access others' liked messages page when logged out?"""   
+        """Can not access others' liked messages page when logged out"""   
 
         with self.client as c:
             response = c.get(f"/users/{self.testuser2.id}/likes",
@@ -121,8 +121,10 @@ class LikeViewTestCase(TestCase):
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.testuser2.id
 
+            # user2 likes a message
             c.post(f"/users/like/{self.message.id}", follow_redirects=True)
 
+            # user2 unlike message
             response = c.post(f"/users/unlike/{self.message.id}", follow_redirects=True)
 
             user2 = User.query.get(self.testuser2.id)
@@ -133,7 +135,7 @@ class LikeViewTestCase(TestCase):
             self.assertEqual(len(user2.liked_messages), 0)
 
     def test_like_message_not_logged_in(self):
-        """Can like another's message when not logged in?"""
+        """Can not like another's message when not logged in"""
 
         with self.client as c:  
             response = c.post(f"/users/like/{self.message.id}", follow_redirects=True)
@@ -146,7 +148,7 @@ class LikeViewTestCase(TestCase):
             self.assertEqual(len(user2.liked_messages), 0)
     
     def test_unlike_message_not_logged_in(self):
-        """Can unlike another's message when not logged in?"""
+        """Can not unlike another's message when not logged in"""
 
         with self.client as c:  
             message = Message.query.get(self.message.id)

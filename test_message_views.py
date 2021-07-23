@@ -38,8 +38,8 @@ class MessageViewTestCase(TestCase):
     def setUp(self):
         """Create test client, add sample data."""
 
-        User.query.delete()
         Message.query.delete()
+        User.query.delete()
 
         self.client = app.test_client()
 
@@ -89,6 +89,7 @@ class MessageViewTestCase(TestCase):
             # adds message
             c.post("/messages/new", data={"text": "Hello"})
             msg = Message.query.one()
+            self.assertEqual("Hello", msg.text)
 
             # deletes message
             delete_resp = c.post(f"/messages/{msg.id}/delete")
@@ -98,7 +99,7 @@ class MessageViewTestCase(TestCase):
 
 
     def test_find_invalid_message(self):
-        """Can get a message with message id that does not exist?"""
+        """Can not get a message with message id that does not exist"""
 
         with self.client as c:
         
@@ -124,10 +125,11 @@ class MessageViewTestCase(TestCase):
 
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Test Message - For Testing", html)
+            self.assertIn(msg.text, str(resp.data))
 
 
     def test_add_message_not_logged_in(self):
-        """Can add a message when not logged in?"""
+        """Can not add a message when not logged in"""
 
         with self.client as c:
             # we do not set the session so we are not "logged in"
@@ -140,7 +142,7 @@ class MessageViewTestCase(TestCase):
     
 
     def test_delete_message_not_logged_in(self):
-        """Can delete a message when not logged in?"""
+        """Can not delete a message when not logged in"""
 
         with self.client as c:
             # we do not set the session so we are not "logged in"

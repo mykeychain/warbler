@@ -9,7 +9,7 @@ import os
 from unittest import TestCase
 from flask import session
 
-from models import db, Message, User, Follows
+from models import db, Message, User
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
@@ -39,8 +39,8 @@ class UserViewTestCase(TestCase):
     def setUp(self):
         """Create test client, add sample data."""
 
-        User.query.delete()
         Message.query.delete()
+        User.query.delete()
 
         self.client = app.test_client()
 
@@ -64,6 +64,7 @@ class UserViewTestCase(TestCase):
 
         db.session.rollback()
 
+########################################### LOGIN/LOGOUT TESTS ####################################################
     
     def test_login(self):
         """Can user log in with valid credentials?"""
@@ -99,6 +100,7 @@ class UserViewTestCase(TestCase):
             with self.assertRaises(KeyError): 
                 session[CURR_USER_KEY]
 
+########################################### VIEW FOLLOWING/FOLLOWER TESTS ####################################################
     
     def test_logged_in_user_view_others_followers(self):
         """Can a logged in user view others' followers page"""
@@ -131,7 +133,7 @@ class UserViewTestCase(TestCase):
 
 
     def test_logged_out_view_others_followers(self):
-        """Can access others' followers page when logged out?"""   
+        """Can not access others' followers page when logged out"""   
 
         with self.client as c:
             response = c.get(f"/users/{self.testuser2.id}/followers",
@@ -144,7 +146,7 @@ class UserViewTestCase(TestCase):
 
     
     def test_logged_out_view_others_following(self):
-        """Can access others' following page when logged out?"""   
+        """Can not access others' following page when logged out"""   
 
         with self.client as c:
             response = c.get(f"/users/{self.testuser2.id}/following",
@@ -155,7 +157,8 @@ class UserViewTestCase(TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertIn("Access unauthorized", html)
 
-    
+########################################### USER TESTS ####################################################
+
     def test_get_invalid_user(self):
         """Can get details of invalid user?"""
 
@@ -175,6 +178,7 @@ class UserViewTestCase(TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertIn(f"@{self.testuser.username}", html)
     
+########################################### EDIT PROFILE TESTS ####################################################
 
     def test_show_edit_own_profile(self):
         """Can display edit profile page when logged in?"""
@@ -186,7 +190,7 @@ class UserViewTestCase(TestCase):
             response = c.get("/users/profile")
             html = response.get_data(as_text=True)
 
-            self.assertEqual(response.status, '200 OK')
+            self.assertEqual(response.status_code, 200)
             self.assertIn("Test Edit User Profile", html)
 
     
@@ -210,7 +214,7 @@ class UserViewTestCase(TestCase):
             self.assertIn("updated bio", html)
 
     def test_show_edit_profile_not_logged_in(self):
-        """Can see edit profile page when not logged in?"""
+        """Can not see edit profile page when not logged in"""
 
         with self.client as c:
             response = c.get("/users/profile", follow_redirects=True)
@@ -218,6 +222,8 @@ class UserViewTestCase(TestCase):
 
             self.assertEqual(response.status_code, 200)
             self.assertIn("You are currently not logged in", html)
+
+########################################### FOLLOW/UNFOLLOW TESTS ####################################################
 
     def test_follow_user(self):
         """Can user follow another user?"""
@@ -242,8 +248,10 @@ class UserViewTestCase(TestCase):
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.testuser.id
 
+            # user is following user2
             c.post(f"/users/follow/{self.testuser2.id}", follow_redirects=True)
 
+            # user is unfollowing user2
             unfollow_response = c.post(f"/users/stop-following/{self.testuser2.id}", follow_redirects=True)
             html = unfollow_response.get_data(as_text=True)
 
@@ -253,8 +261,8 @@ class UserViewTestCase(TestCase):
             self.assertNotIn(f"@{self.testuser2.username}", html)
             self.assertEqual(len(user.following), 0)
 
-    def test_follow_user_not_logged_in(self):
-        """Can user follow another user when not logged in?"""
+    def test_follow_user_not_logged_in_fail(self):
+        """Can not user follow another user when not logged in"""
 
         with self.client as c:
             response = c.post(f"/users/follow/{self.testuser2.id}", follow_redirects=True)
@@ -263,8 +271,8 @@ class UserViewTestCase(TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertIn("Access unauthorized", html)
             
-    def test_unfollow_user_not_logged_in(self):
-        """Can user unfollow another user when not logged in?"""
+    def test_unfollow_user_not_logged_in_fail(self):
+        """Can not user unfollow another user when not logged in"""
 
         with self.client as c:
             response = c.post(f"/users/stop-following/{self.testuser2.id}", follow_redirects=True)
@@ -272,6 +280,8 @@ class UserViewTestCase(TestCase):
 
             self.assertEqual(response.status_code, 200)
             self.assertIn("Access unauthorized", html)
+
+########################################### SEARCH TESTS ####################################################
 
     def test_search_user(self):
         """Can search for another user with search?"""
@@ -282,6 +292,10 @@ class UserViewTestCase(TestCase):
 
             self.assertEqual(response.status_code, 200)
             self.assertIn(f"@{self.testuser.username}", html)
+
+    #test search for specific user
+
+########################################### DELETE TESTS ####################################################
         
     def test_delete_user(self):
         """Can delete user?"""
@@ -300,7 +314,7 @@ class UserViewTestCase(TestCase):
             self.assertEqual(User.query.count(), 1)
 
     def test_delete_user_not_logged_in(self):
-        """Can delete user when not logged in?"""
+        """Can not delete user when not logged in"""
 
         with self.client as c:
             response = c.post("/users/delete", follow_redirects=True)

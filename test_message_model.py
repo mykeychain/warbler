@@ -36,13 +36,14 @@ class MessageModelTestCase(TestCase):
     def setUp(self):
         """Create test client, add sample data."""
 
-        User.query.delete()
         Message.query.delete()
+        User.query.delete()
 
-        user = User(
+        user = User.signup(
             email="test@test.com",
             username="testuser",
-            password="HASHED_PASSWORD"
+            password="HASHED_PASSWORD",
+            image_url=""
         )
 
         db.session.add(user)
@@ -72,8 +73,13 @@ class MessageModelTestCase(TestCase):
 
         m = Message(
             text="text",
-            user_id=self.user
+            user_id=self.user.id
         )
+
+        db.session.add(m)
+        db.session.commit()
+
+        #query for Message and test 
 
         self.assertIsInstance(m, Message)
         self.assertEqual(len(m.text), 4)
