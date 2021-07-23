@@ -113,3 +113,51 @@ class LikeViewTestCase(TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertIn(message, user2.liked_messages)
             self.assertEqual(len(user2.liked_messages), 1)
+
+    def test_unlike_message(self):
+        """Can unlike another's message?"""
+
+        with self.client as c:  
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser2.id
+
+            c.post(f"/users/like/{self.message.id}", follow_redirects=True)
+
+            response = c.post(f"/users/unlike/{self.message.id}", follow_redirects=True)
+
+            user2 = User.query.get(self.testuser2.id)
+            message = Message.query.get(self.message.id)
+            
+            self.assertEqual(response.status_code, 200)
+            self.assertNotIn(message, user2.liked_messages)
+            self.assertEqual(len(user2.liked_messages), 0)
+
+    def test_like_message_not_logged_in(self):
+        """Can like another's message when not logged in?"""
+
+        with self.client as c:  
+            response = c.post(f"/users/like/{self.message.id}", follow_redirects=True)
+            html = response.get_data(as_text=True)
+
+            user2 = User.query.get(self.testuser2.id)
+            
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("Access unauthorized", html)
+            self.assertEqual(len(user2.liked_messages), 0)
+    
+    def test_unlike_message_not_logged_in(self):
+        """Can unlike another's message when not logged in?"""
+
+        with self.client as c:  
+            message = Message.query.get(self.message.id)
+            self.testuser2.liked_messages.append(message)
+            db.session.commit()
+
+            response = c.post(f"/users/like/{self.message.id}", follow_redirects=True)
+            html = response.get_data(as_text=True)
+
+            user2 = User.query.filter_by(username="testuser2").first()
+    
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("Access unauthorized", html)
+            self.assertEqual(len(user2.liked_messages), 1)
