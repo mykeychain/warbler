@@ -61,6 +61,7 @@ class LikeViewTestCase(TestCase):
         db.session.commit()
 
         self.testuser2 = User.query.filter_by(username="testuser2").first()
+        self.message = Message.query.filter_by(user_id=self.testuser.id).first()
 
 
     def tearDown(self):
@@ -95,3 +96,20 @@ class LikeViewTestCase(TestCase):
 
             self.assertEqual(response.status_code, 200)
             self.assertIn("Access unauthorized", html)
+    
+
+    def test_like_message(self):
+        """Can like another's message?"""
+
+        with self.client as c:  
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser2.id
+
+            response = c.post(f"/users/like/{self.message.id}", follow_redirects=True)
+
+            user2 = User.query.get(self.testuser2.id)
+            message = Message.query.get(self.message.id)
+            
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(message, user2.liked_messages)
+            self.assertEqual(len(user2.liked_messages), 1)
