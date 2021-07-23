@@ -229,8 +229,11 @@ class UserViewTestCase(TestCase):
             response = c.post(f"/users/follow/{self.testuser2.id}", follow_redirects=True)
             html = response.get_data(as_text=True)
 
+            user = User.query.get(sess[CURR_USER_KEY])
+
             self.assertEqual(response.status_code, 200)
             self.assertIn(f"@{self.testuser2.username}", html)
+            self.assertEqual(len(user.following), 1)
     
     def test_unfollow_user(self):
         """Can user unfollow another user?"""
@@ -244,8 +247,11 @@ class UserViewTestCase(TestCase):
             unfollow_response = c.post(f"/users/stop-following/{self.testuser2.id}", follow_redirects=True)
             html = unfollow_response.get_data(as_text=True)
 
+            user = User.query.get(sess[CURR_USER_KEY])
+
             self.assertEqual(unfollow_response.status_code, 200)
             self.assertNotIn(f"@{self.testuser2.username}", html)
+            self.assertEqual(len(user.following), 0)
 
     def test_follow_user_not_logged_in(self):
         """Can user follow another user when not logged in?"""
