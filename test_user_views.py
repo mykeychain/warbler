@@ -4,6 +4,9 @@
 #
 #    FLASK_ENV=production python -m unittest test_user_views.py
 
+# Missing tests: login w/ wrong pw, login w/ wrong username, edit profile w/
+#   wrong pw, search for user with search term, homepage display when logged
+#   in with following/followers
 
 import os
 from unittest import TestCase

@@ -2,7 +2,7 @@
 
 # run these tests like:
 #
-#    python -m unittest test_message_model.py
+#    FLASK_ENV=production python -m unittest test_message_model.py
 
 
 import os
