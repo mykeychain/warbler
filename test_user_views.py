@@ -305,5 +305,16 @@ class UserViewTestCase(TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertIn(f"@{self.testuser.username}", html)
         
-    # def test_delete_user(self):
-    #     """Can delete user?"""
+    def test_delete_user(self):
+        """Can delete user?"""
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+            response = c.post("/users/delete", follow_redirects=True)
+            html = response.get_data(as_text=True)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("User successfully deleted", html)
+            self.assertEqual(User.query.count(), 1)
