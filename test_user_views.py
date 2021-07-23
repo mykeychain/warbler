@@ -224,7 +224,7 @@ class UserViewTestCase(TestCase):
             html = response.get_data(as_text=True)
 
             self.assertEqual(response.status_code, 200)
-            self.assertIn("You are currently not logged in", html)
+            self.assertIn("Access unauthorized", html)
 
 ########################################### FOLLOW/UNFOLLOW TESTS ####################################################
 

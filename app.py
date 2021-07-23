@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from forms import UserAddForm, LoginForm, MessageForm, UserEditForm, CsrfOnlyForm
 from models import db, connect_db, User, Message
 import pdb
+from functools import wraps
 
 CURR_USER_KEY = "curr_user"
 
@@ -28,6 +29,19 @@ connect_db(app)
 
 ##############################################################################
 # User signup/login/logout
+
+def login_required(func):
+    """Checks if user is logged in, if not then redirect to login page."""
+
+    @wraps(func)
+    def check_logged_in(*args, **kwargs): 
+        if not g.user:
+            flash("Access unauthorized.", "danger")
+            return redirect("/") 
+        else: 
+            return func(*args, **kwargs)
+    
+    return check_logged_in
 
 
 @app.before_request
@@ -160,36 +174,27 @@ def users_show(user_id):
 
 
 @app.route('/users/<int:user_id>/following')
+@login_required
 def show_following(user_id):
     """Show list of people this user is following."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     user = User.query.get_or_404(user_id)
     return render_template('users/following.html', user=user)
 
 
 @app.route('/users/<int:user_id>/followers')
+@login_required
 def users_followers(user_id):
     """Show list of followers of this user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     user = User.query.get_or_404(user_id)
     return render_template('users/followers.html', user=user)
 
 
 @app.route('/users/follow/<int:follow_id>', methods=['POST'])
+@login_required
 def add_follow(follow_id):
     """Add a follow for the currently-logged-in user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     if g.csrf_form.validate_on_submit():
         followed_user = User.query.get_or_404(follow_id)
@@ -200,12 +205,9 @@ def add_follow(follow_id):
 
 
 @app.route('/users/stop-following/<int:follow_id>', methods=['POST'])
+@login_required
 def stop_following(follow_id):
     """Have currently-logged-in-user stop following this user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     if g.csrf_form.validate_on_submit():
         followed_user = User.query.get(follow_id)
@@ -217,12 +219,9 @@ def stop_following(follow_id):
 
 
 @app.route('/users/profile', methods=["GET", "POST"])
+@login_required
 def profile():
     """Update profile for current user."""
-
-    if not g.user:
-        flash("You are currently not logged in.", "danger")
-        return redirect("/")
     
     form = UserEditForm(obj=g.user)
 
@@ -248,12 +247,9 @@ def profile():
 
 
 @app.route('/users/delete', methods=["POST"])
+@login_required
 def delete_user():
     """Delete user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     if g.csrf_form.validate_on_submit():
         do_logout()
@@ -271,15 +267,12 @@ def delete_user():
 # Messages routes:
 
 @app.route('/messages/new', methods=["GET", "POST"])
+@login_required
 def messages_add():
     """Add a message:
 
     Show form if GET. If valid, update message and redirect to user page.
     """
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     form = MessageForm()
 
@@ -302,12 +295,9 @@ def messages_show(message_id):
 
 
 @app.route('/messages/<int:message_id>/delete', methods=["POST"])
+@login_required
 def messages_destroy(message_id):
     """Delete a message."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     if g.csrf_form.validate_on_submit():
         msg = Message.query.get_or_404(message_id)
@@ -321,12 +311,9 @@ def messages_destroy(message_id):
 # Likes
 
 @app.route('/users/like/<int:message_id>', methods=['POST'])
+@login_required
 def like_message(message_id):
     """Like a message for current user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     if g.csrf_form.validate_on_submit():
         liked_message = Message.query.get_or_404(message_id)
@@ -337,12 +324,9 @@ def like_message(message_id):
 
 
 @app.route('/users/unlike/<int:message_id>', methods=['POST'])
+@login_required
 def unlike_message(message_id):
     """Unlike a message for current user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     if g.csrf_form.validate_on_submit():
         liked_message = Message.query.get_or_404(message_id)
@@ -352,12 +336,9 @@ def unlike_message(message_id):
     return redirect("/")
 
 @app.route('/users/<int:user_id>/likes')
+@login_required
 def users_likes(user_id):
     """Show list of likes of this user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     user = User.query.get_or_404(user_id)
     return render_template('users/likes.html', user=user)
