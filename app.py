@@ -11,12 +11,13 @@ from functools import wraps
 
 CURR_USER_KEY = "curr_user"
 
-app = Flask(__name__)
+database_url = os.environ.get('DATABASE_URL', 'postgresql:///warbler')
 
-# Get DB_URI from environ variable (useful for production/testing) or,
-# if not set there, use development local db.
-app.config['SQLALCHEMY_DATABASE_URI'] = (
-    os.environ.get('DATABASE_URL', 'postgresql:///warbler'))
+# fix incorrect database URIs currently returned by Heroku's pg setup
+database_url = database_url.replace('postgres://', 'postgresql://')
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
